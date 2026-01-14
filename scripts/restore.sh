@@ -18,7 +18,7 @@ if [ -z "$SELECTED_FILE" ] || [ ! -f "$SELECTED_FILE" ]; then
     exit 1
 fi
 
-docker-compose -f "$ROOT_DIR/docker-compose.yml" start
+docker compose -f "$ROOT_DIR/docker compose.yml" start
 
 if [[ "$SELECTED_FILE" == *.gz ]]; then
     gunzip -c "$SELECTED_FILE" | docker exec -i $DB_CONTAINER_NAME psql -U $DB_USER -d $DB_NAME 

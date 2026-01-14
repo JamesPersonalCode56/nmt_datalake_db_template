@@ -14,7 +14,7 @@ read -r confirm
 [[ "$confirm" != "y" ]] && echo "Cancelled." && exit 0
 
 echo "Stopping container and cleaning data..."
-docker-compose -f "$ROOT_DIR/docker-compose.yml" down
+docker compose -f "$ROOT_DIR/docker compose.yml" down
 
 if [ -d "$ROOT_DIR/data" ]; then
     sudo rm -rf "$ROOT_DIR/data/"*

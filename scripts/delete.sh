@@ -18,7 +18,7 @@ if [ "$confirm" != "DELETE" ]; then
 fi
 
 echo "Destroying container, network and volumes..."
-docker-compose -f "$ROOT_DIR/docker-compose.yml" down --rmi all -v --remove-orphans
+docker compose -f "$ROOT_DIR/docker compose.yml" down --rmi all -v --remove-orphans
 
 if [ -d "$ROOT_DIR/data" ]; then
     sudo rm -rf "$ROOT_DIR/data"

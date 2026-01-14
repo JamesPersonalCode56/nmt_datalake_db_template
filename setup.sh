@@ -28,7 +28,7 @@ if [ -d "scripts" ]; then
 fi
 
 command -v docker >/dev/null 2>&1 || echo -e "${RED}Error: docker not installed${NC}" 
-command -v docker-compose >/dev/null 2>&1 || echo -e "${RED}Error: docker-compose not installed${NC}" 
+command -v docker compose >/dev/null 2>&1 || echo -e "${RED}Error: docker compose not installed${NC}" 
 
 chmod +x setup.sh
 echo -e "${GREEN}--- Setup Complete ---${NC}"

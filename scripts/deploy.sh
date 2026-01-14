@@ -17,7 +17,7 @@ if [ ! -z "$PORT_CHECK" ]; then
     exit 1
 fi
 
-docker-compose -f "$ROOT_DIR/docker-compose.yml" up -d
+docker compose -f "$ROOT_DIR/docker compose.yml" up -d
 
 echo "-------------------------------------------------------"
 echo "DEPLOYMENT SUCCESSFUL!"

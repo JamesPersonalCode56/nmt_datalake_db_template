@@ -15,5 +15,5 @@ if [ "$STATUS" == "true" ]; then
     echo "Container $DB_CONTAINER_NAME is already running."
 else
     echo "Starting $DB_CONTAINER_NAME..."
-    docker-compose -f "$ROOT_DIR/docker-compose.yml" start || docker-compose -f "$ROOT_DIR/docker-compose.yml" up -d
+    docker compose -f "$ROOT_DIR/docker compose.yml" start || docker compose -f "$ROOT_DIR/docker compose.yml" up -d
 fi
