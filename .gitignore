@@ -2,8 +2,10 @@
 .env
 
 # Docker volumes / database data
-data/
-backups/
+data/*
+!data/.gitkeep
+backups/*
+!backups/.gitkeep
 db_data/
 volumes/
 .pgdata/
