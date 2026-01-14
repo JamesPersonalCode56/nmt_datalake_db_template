@@ -1,0 +1,22 @@
+# Environment (secrets)
+.env
+
+# Docker volumes / database data
+data/
+backups/
+db_data/
+volumes/
+.pgdata/
+.mysql/
+mongo-data/
+
+# Database dumps (runtime)
+*.bak
+*.dump
+*.log
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
