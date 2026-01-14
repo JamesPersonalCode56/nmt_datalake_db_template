@@ -4,7 +4,8 @@ set -euo pipefail
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m'
-CURRENT_DIR=$(pwd)
+CURRENT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 
 echo -e "${GREEN}--- Initializing Database Template ---${NC}"
 
@@ -13,9 +14,9 @@ if [ ! -f .env ]; then
 fi
 
 if ! grep -q "PROJECT_ROOT=" .env; then
-    echo "PROJECT_ROOT=$CURRENT_DIR" >> .env
+    echo "PROJECT_ROOT=\"$CURRENT_DIR\"" >> .env
 else
-    sed -i "s|^PROJECT_ROOT=.*|PROJECT_ROOT=$CURRENT_DIR|" .env
+    sed -i "s|^PROJECT_ROOT=.*|PROJECT_ROOT=\"$CURRENT_DIR\"|" .env
 fi
 
 chmod 600 .env 

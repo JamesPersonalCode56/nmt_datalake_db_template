@@ -3,21 +3,26 @@ set -euo pipefail
 
 trap 'echo "Error: Deployment failed at line $LINENO"' ERR
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)" 
-if [ -f "$ROOT_DIR/.env" ]; then 
-    export $(grep -v '^#' "$ROOT_DIR/.env" | xargs) 
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
+load_env
+require_compose
+
+PORT_CHECK=""
+if command -v ss >/dev/null 2>&1; then
+  PORT_CHECK="$(ss -lntp 2>/dev/null | awk '{print $4,$6}' | grep -F ":${DB_PORT_EXTERNAL} " || true)"
+elif command -v lsof >/dev/null 2>&1; then
+  PORT_CHECK="$(lsof -i -P -n 2>/dev/null | grep LISTEN | grep -F ":${DB_PORT_EXTERNAL}" || true)"
 else
-    exit 1
+  echo "Warning: ss/lsof not found, skipping port check."
 fi
 
-PORT_CHECK=$(lsof -i -P -n | grep LISTEN | grep :$DB_PORT_EXTERNAL || true) 
-if [ ! -z "$PORT_CHECK" ]; then
-    echo "Error: Port $DB_PORT_EXTERNAL is already occupied by:"
-    echo "$PORT_CHECK"
-    exit 1
+if [ -n "$PORT_CHECK" ]; then
+  echo "Error: Port $DB_PORT_EXTERNAL is already occupied by:"
+  echo "$PORT_CHECK"
+  exit 1
 fi
 
-docker compose -f "$ROOT_DIR/docker compose.yml" up -d
+docker compose -f "$COMPOSE_FILE" up -d
 
 echo "-------------------------------------------------------"
 echo "DEPLOYMENT SUCCESSFUL!"
