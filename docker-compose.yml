@@ -16,7 +16,18 @@ services:
       - ./data:/var/lib/postgresql/data
     networks:
       - db_internal_network
-
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 networks:
   db_internal_network:
     name: ${DB_CONTAINER_NAME}_net
+
+    

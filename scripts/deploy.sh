@@ -1,42 +1,44 @@
 #!/bin/bash
 
-# 1. Load biến môi trường
-if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs)
+# 1. Load environment variables using absolute path
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [ -f "$ROOT_DIR/.env" ]; then
+    export $(grep -v '^#' "$ROOT_DIR/.env" | xargs)
 else
-    echo "Lỗi: Không tìm thấy file .env. Copy từ .env.example đi mày."
+    echo "Error: .env file not found at $ROOT_DIR/.env"
     exit 1
 fi
 
-echo "--- Đang kiểm tra hệ thống cho container: $DB_CONTAINER_NAME ---"
+echo "--- Checking system for container: $DB_CONTAINER_NAME ---"
 
-# 2. Kiểm tra Port có bị chiếm dụng không
+# 2. Check if Port is already in use
 PORT_CHECK=$(lsof -i -P -n | grep LISTEN | grep :$DB_PORT_EXTERNAL)
 if [ ! -z "$PORT_CHECK" ]; then
-    echo "Lỗi: Port $DB_PORT_EXTERNAL đã có thằng khác dùng rồi:"
+    echo "Error: Port $DB_PORT_EXTERNAL is already occupied by:"
     echo "$PORT_CHECK"
     exit 1
 fi
 
-# 3. Tạo folder data nếu chưa có
-if [ ! -d "data" ]; then
-    mkdir -p data
-    echo "Đã tạo folder data."
+# 3. Create data directory if not exists (using absolute path)
+if [ ! -d "$ROOT_DIR/data" ]; then
+    mkdir -p "$ROOT_DIR/data"
+    echo "Data directory created."
 fi
 
-# 4. Triển khai
-echo "Đang pull image và khởi chạy container..."
-docker-compose up -d
+# 4. Deployment
+echo "Pulling images and starting container..."
+# Explicitly point to the docker-compose file location
+docker-compose -f "$ROOT_DIR/docker-compose.yml" up -d
 
-# 5. Thông báo kết quả
+# 5. Deployment Result
 if [ $? -eq 0 ]; then
     echo "-------------------------------------------------------"
-    echo "DEPLOY THÀNH CÔNG!"
+    echo "DEPLOYMENT SUCCESSFUL!"
     echo "Container: $DB_CONTAINER_NAME"
-    echo "IP/Port: $DB_HOST_IP:$DB_PORT_EXTERNAL"
-    echo "DB Name: $DB_NAME"
+    echo "Endpoint:  $DB_HOST_IP:$DB_PORT_EXTERNAL"
+    echo "Database:  $DB_NAME"
     echo "-------------------------------------------------------"
-    echo "Lưu ý: Nếu đây là lần đầu, đợi vài giây để nó chạy schema.sql trong /init."
+    echo "Note: If this is the first run, wait a few seconds for /init/schema.sql to execute."
 else
-    echo "Lỗi: Deploy thất bại. Kiểm tra log bằng docker logs $DB_CONTAINER_NAME"
+    echo "Error: Deployment failed. Check logs with: docker logs $DB_CONTAINER_NAME"
 fi

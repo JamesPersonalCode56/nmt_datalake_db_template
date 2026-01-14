@@ -1,26 +1,20 @@
 #!/bin/bash
-
-if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs)
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+if [ -f "$ROOT_DIR/.env" ]; then
+    export $(grep -v '^#' "$ROOT_DIR/.env" | xargs)
 else
-    echo "Error: .env file not found."
+    echo "Error: .env file not found at $ROOT_DIR/.env"
     exit 1
 fi
 
-echo "WARNING: This will wipe all data in $DB_CONTAINER_NAME. Are you sure? (y/n)"
+echo "WARNING: Wipe all data in $DB_CONTAINER_NAME? (y/n)"
 read -r confirm
-
-if [ "$confirm" != "y" ]; then
-    echo "Operation cancelled."
-    exit 0
-fi
+[[ "$confirm" != "y" ]] && echo "Cancelled." && exit 0
 
 echo "Stopping container and cleaning data..."
-docker-compose down
+docker-compose -f "$ROOT_DIR/docker-compose.yml" down
 
-if [ -d "data" ]; then
-    sudo rm -rf ./data/*
+if [ -d "$ROOT_DIR/data" ]; then
+    sudo rm -rf "$ROOT_DIR/data/"*
     echo "Data directory cleared."
 fi
-
-echo "Clean operation finished. Run deploy.sh to re-initialize."
