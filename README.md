@@ -1,10 +1,19 @@
 # !!! ⚡ NẾU LƯỜI ĐỌC ⚡ !!!
     1. Đổi tên folder template thành tên project (ví dụ: db_payment)
-    2. Chạy file "./setup.sh"
-    3. Copy + Paste code schema mới vào "init/schema.sql"
-    4. Chỉnh file ".env"
-    5. Chạy file "./scripts/deploy.sh" để build mới hoàn toàn
-    6. Đợi ~15s sau đó chạy file "./scripts/health_check.sh" để xác nhận mọi thứ đã ổn
+
+    2. Ở terminal gõ: 
+        cd /path/to/<project>       (exp: cd /mnt/14TB/PROD_DB/db_payment)
+        chmod +x setup.sh scripts/*.sh
+
+    3. Chạy file "./setup.sh"
+
+    4. Copy + Paste code schema mới vào "init/schema.sql"
+
+    5. Chỉnh file ".env"
+
+    6. Chạy file "./scripts/deploy.sh" để build mới hoàn toàn
+
+    7. Đợi ~15s sau đó chạy file "./scripts/health_check.sh" để xác nhận mọi thứ đã ổn
 * Đọc thêm về các script .sh khác để biết
 * Database dùng Ofelia tự backup mỗi ngày lúc 03:00 gmt+7 (default là 3 bản backup)  
 # !!! ------------------------- !!!
