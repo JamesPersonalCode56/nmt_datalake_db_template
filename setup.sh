@@ -27,15 +27,6 @@ if [ -d "scripts" ]; then
     [cite_start]chmod +x scripts/*.sh [cite: 61]
 fi
 
-if [ ! -f Dockerfile ]; then
-    cat <<EOF > Dockerfile
-FROM mcuadros/ofelia:latest
-RUN apk add --no-cache docker-cli tini
-ENTRYPOINT ["/sbin/tini", "--", "/usr/bin/ofelia"]
-CMD ["daemon", "--docker"]
-EOF
-fi
-
 [cite_start]command -v docker >/dev/null 2>&1 || echo -e "${RED}Error: docker not installed${NC}" [cite: 63]
 [cite_start]command -v docker-compose >/dev/null 2>&1 || echo -e "${RED}Error: docker-compose not installed${NC}" [cite: 64]
 

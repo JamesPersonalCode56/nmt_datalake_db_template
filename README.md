@@ -8,8 +8,9 @@ Professional, production-ready template for deploying and managing isolated Post
     3. Copy + Paste code schema mới vào "init/schema.sql"
     4. Chỉnh file ".env"
     5. Chạy file "./scripts/deploy.sh" để build mới hoàn toàn
+    6. Chạy file "./scripts/health_check.sh" để xác nhận mọi thứ đã ổn
 * Đọc thêm về các script .sh khác để biết
-* Database tự backup mỗi ngày lúc 03:00 gmt+7 (default là 3 bản) dùng ofelia 
+* Database dùng Ofelia tự backup mỗi ngày lúc 03:00 gmt+7 (default là 3 bản)  
 
 ## 1. Quick Start Workflow
 
@@ -71,4 +72,5 @@ All scripts support execution from any directory as they resolve the project roo
 ├── scripts/           # Core management shell scripts
 ├── .env               # Configuration (Credentials & Network)
 ├── docker-compose.yml # Container orchestration config
+├── Dockerfile         # Custom Ofelia image with docker-cli
 └── setup.sh           # Project initializer
