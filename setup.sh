@@ -9,7 +9,7 @@ CURRENT_DIR=$(pwd)
 echo -e "${GREEN}--- Initializing Database Template ---${NC}"
 
 if [ ! -f .env ]; then
-    cp .env.example .env [cite: 58]
+    cp .env.example .env 
 fi
 
 if ! grep -q "PROJECT_ROOT=" .env; then
@@ -18,17 +18,17 @@ else
     sed -i "s|^PROJECT_ROOT=.*|PROJECT_ROOT=$CURRENT_DIR|" .env
 fi
 
-chmod 600 .env [cite: 59]
+chmod 600 .env 
 
-mkdir -p data backups [cite: 60]
-touch data/.gitkeep backups/.gitkeep [cite: 60]
+mkdir -p data backups 
+touch data/.gitkeep backups/.gitkeep 
 
 if [ -d "scripts" ]; then
-    chmod +x scripts/*.sh [cite: 61]
+    chmod +x scripts/*.sh 
 fi
 
-command -v docker >/dev/null 2>&1 || echo -e "${RED}Error: docker not installed${NC}" [cite: 63]
-command -v docker-compose >/dev/null 2>&1 || echo -e "${RED}Error: docker-compose not installed${NC}" [cite: 64]
+command -v docker >/dev/null 2>&1 || echo -e "${RED}Error: docker not installed${NC}" 
+command -v docker-compose >/dev/null 2>&1 || echo -e "${RED}Error: docker-compose not installed${NC}" 
 
 chmod +x setup.sh
 echo -e "${GREEN}--- Setup Complete ---${NC}"
