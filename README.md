@@ -1,16 +1,18 @@
-# Database Template for Datalake Automation
-
-Professional, production-ready template for deploying and managing isolated PostgreSQL instances within a Datalake architecture.
-
-# Quick Start 5 dòng tiếng Việt:
+# !!! ⚡ NẾU LƯỜI ĐỌC ⚡ !!!
     1. Đổi tên folder template thành tên project (ví dụ: db_payment)
     2. Chạy file "./setup.sh"
     3. Copy + Paste code schema mới vào "init/schema.sql"
     4. Chỉnh file ".env"
     5. Chạy file "./scripts/deploy.sh" để build mới hoàn toàn
-    6. Chạy file "./scripts/health_check.sh" để xác nhận mọi thứ đã ổn
+    6. Đợi ~15s sau đó chạy file "./scripts/health_check.sh" để xác nhận mọi thứ đã ổn
 * Đọc thêm về các script .sh khác để biết
-* Database dùng Ofelia tự backup mỗi ngày lúc 03:00 gmt+7 (default là 3 bản)  
+* Database dùng Ofelia tự backup mỗi ngày lúc 03:00 gmt+7 (default là 3 bản backup)  
+# !!! ------------------------- !!!
+
+
+# Database Template for Datalake Automation
+
+Professional, production-ready template for deploying and managing isolated PostgreSQL instances within a Datalake architecture.
 
 ## 1. Quick Start Workflow
 
