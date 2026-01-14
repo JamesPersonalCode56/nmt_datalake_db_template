@@ -2,6 +2,15 @@
 
 Professional, production-ready template for deploying and managing isolated PostgreSQL instances within a Datalake architecture.
 
+# Quick Start 5 dòng tiếng Việt:
+    1. Đổi tên folder template thành tên project (ví dụ: db_payment)
+    2. Chạy file "./setup.sh"
+    3. Copy + Paste code schema mới vào "init/schema.sql"
+    4. Chỉnh file ".env"
+    5. Chạy file "./scripts/deploy.sh" để build mới hoàn toàn
+* Đọc thêm về các script .sh khác để biết
+* Database tự backup mỗi ngày lúc 03:00 gmt+7 (default là 3 bản) dùng ofelia 
+
 ## 1. Quick Start Workflow
 
 1.  **Initialize**: Run the setup script to prepare the environment.

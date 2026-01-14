@@ -26,6 +26,21 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+  scheduler:
+    build: .
+    container_name: ${DB_CONTAINER_NAME}_scheduler
+    depends_on:
+      - db
+    environment:
+      - TZ=${TZ}
+    command: daemon --docker
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${PROJECT_ROOT}:${PROJECT_ROOT}
+    labels:
+      ofelia.job-local.db-backup.schedule: "0 0 3 * * *"
+      ofelia.job-local.db-backup.command: "/bin/sh -c 'cd ${PROJECT_ROOT} && ./scripts/backup.sh'"
+
 networks:
   db_internal_network:
     name: ${DB_CONTAINER_NAME}_net

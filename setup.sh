@@ -1,50 +1,43 @@
 #!/bin/bash
+set -euo pipefail
 
-# 1. Define colors for output
 GREEN='\033[0;32m'
 RED='\033[0;31m'
 NC='\033[0m'
+CURRENT_DIR=$(pwd)
 
 echo -e "${GREEN}--- Initializing Database Template ---${NC}"
 
-# 2. Check for .env file
 if [ ! -f .env ]; then
-    echo "Creating .env from .env.example..."
-    cp .env.example .env
-    echo -e "${RED}ACTION REQUIRED: Edit .env file with your specific configurations.${NC}"
+    [cite_start]cp .env.example .env [cite: 58]
+fi
+
+if ! grep -q "PROJECT_ROOT=" .env; then
+    echo "PROJECT_ROOT=$CURRENT_DIR" >> .env
 else
-    echo ".env file already exists."
+    sed -i "s|^PROJECT_ROOT=.*|PROJECT_ROOT=$CURRENT_DIR|" .env
 fi
 
-if [ -f .env ]; then
-    chmod 600 .env
-    echo "Secured .env permissions (600)."
-fi
+[cite_start]chmod 600 .env [cite: 59]
 
-# 3. Create required directories
-echo "Creating data and backups directories..."
-mkdir -p data backups
-# Ensure giteep files are preserved if they exist
-touch data/.gitkeep backups/.gitkeep
+[cite_start]mkdir -p data backups [cite: 60]
+[cite_start]touch data/.gitkeep backups/.gitkeep [cite: 60]
 
-# 4. Fix permissions for all scripts
-echo "Setting executable permissions for scripts..."
 if [ -d "scripts" ]; then
-    chmod +x scripts/*.sh
-    echo "Permissions set for scripts/ folder."
-else
-    echo -e "${RED}Error: scripts/ directory not found!${NC}"
+    [cite_start]chmod +x scripts/*.sh [cite: 61]
 fi
 
-# 5. Dependency check
-echo "Checking dependencies..."
-command -v docker >/dev/null 2>&1 || { echo -e "${RED}Error: docker is not installed.${NC}"; }
-command -v docker-compose >/dev/null 2>&1 || { echo -e "${RED}Error: docker-compose is not installed.${NC}"; }
-command -v tailscale >/dev/null 2>&1 || { echo -e "${RED}Warning: tailscale not found. Remote access might fail.${NC}"; }
+if [ ! -f Dockerfile ]; then
+    cat <<EOF > Dockerfile
+FROM mcuadros/ofelia:latest
+RUN apk add --no-cache docker-cli tini
+ENTRYPOINT ["/sbin/tini", "--", "/usr/bin/ofelia"]
+CMD ["daemon", "--docker"]
+EOF
+fi
 
-# 6. Final instructions
+[cite_start]command -v docker >/dev/null 2>&1 || echo -e "${RED}Error: docker not installed${NC}" [cite: 63]
+[cite_start]command -v docker-compose >/dev/null 2>&1 || echo -e "${RED}Error: docker-compose not installed${NC}" [cite: 64]
+
 chmod +x setup.sh
 echo -e "${GREEN}--- Setup Complete ---${NC}"
-echo "Next steps:"
-echo "1. Configure your .env file"
-echo "2. Run ./scripts/deploy.sh to start the database"
