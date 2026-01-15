@@ -34,6 +34,19 @@
     ./scripts/health_check.sh
     ```
     * Nếu thấy báo **HEALTHY** và các check đều OK là xong.
+    * Tự động backup bằng Ofelia mỗi 03:00 gmt+7 (lưu tối đa 3 bản backup)
+
+7. **Cách connect tới DB**:
+    * Điền database url vào `.env` ở project nơi chạy services:
+    ```
+    DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DBNAME?param1=value1&param2=value2
+    ```
+
+    Example:
+    ```
+    DATABASE_URL=postgresql://manhnd:123@100.115.36.121:5432/db_payment?sslmode=disable
+    ```
+    * Lưu ý: password phải URL-encode nếu có ký tự đặc biệt: @ : / ? # % & + =…
 
 ---
 
