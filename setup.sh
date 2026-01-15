@@ -22,7 +22,6 @@ fi
 chmod 600 .env 
 
 mkdir -p data backups 
-touch data/.gitkeep backups/.gitkeep 
 
 if [ -d "scripts" ]; then
     chmod +x scripts/*.sh 

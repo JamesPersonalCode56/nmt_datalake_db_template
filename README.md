@@ -3,7 +3,7 @@
 
     2. Ở terminal gõ: 
         cd /path/to/<project>       (exp: cd /mnt/14TB/PROD_DB/db_payment)
-        chmod +x setup.sh scripts/*.sh
+        chmod +x setup.sh
 
     3. Chạy file "./setup.sh"
 

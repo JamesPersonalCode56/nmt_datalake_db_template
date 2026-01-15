@@ -52,9 +52,9 @@ if container_exists "$SCHED"; then
     || echo "Warning: Scheduler might not be started (check logs)."
 
   if container_running "$SCHED"; then
-    safe docker exec "$SCHED" ofelia list >/dev/null 2>&1 \
-      && docker exec "$SCHED" ofelia list \
-      || echo "Warning: Cannot list ofelia jobs (ofelia list failed)."
+    safe docker exec "$SCHED" ofelia validate >/dev/null 2>&1 \
+      && echo "Result: ofelia validate OK." \
+      || echo "Warning: ofelia validate failed."
   else
     echo "Warning: Scheduler container exists but not running."
   fi
