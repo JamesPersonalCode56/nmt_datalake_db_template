@@ -20,7 +20,7 @@ mkdir -p "$BACKUP_DIR"
 TIMESTAMP=$(date +%Y%m%d_%H%M%S) 
 FILE_NAME="${BACKUP_DIR}/${DB_NAME}_${TIMESTAMP}.sql" 
 
-docker exec "$DB_CONTAINER_NAME" pg_dump -U "$DB_USER" "$DB_NAME" > "$FILE_NAME"
+docker exec "$DB_CONTAINER_NAME" pg_dump -U "$DB_USER" -d "$DB_NAME" --clean --if-exists --no-owner --no-privileges > "$FILE_NAME"
 
 if [ -s "$FILE_NAME" ]; then
     gzip "$FILE_NAME" 

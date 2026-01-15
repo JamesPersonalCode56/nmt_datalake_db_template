@@ -5,6 +5,9 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
 load_env
 require_compose
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BACKUP_DIR="${BACKUP_DIR:-$ROOT_DIR/backups}"
+
 echo "--- PRODUCTION VERIFICATION: $DB_CONTAINER_NAME ---"
 
 have_cmd() { command -v "$1" >/dev/null 2>&1; }
@@ -59,19 +62,26 @@ else
 fi
 
 # 3. Kiểm tra Volume Mapping (Data & Init)
-echo -e "\n[3/5] Volume & Storage Status:"
-if [ -d "$ROOT_DIR/data/base" ]; then
-  echo "Result: Data persistence confirmed."
+echo
+echo "[3/5] Volume & Storage Status:"
+
+PGDATA_PATH="$(docker exec "$DB_CONTAINER_NAME" sh -lc 'echo "${PGDATA:-/var/lib/postgresql/data}"' 2>/dev/null || true)"
+
+if [ -n "${PGDATA_PATH:-}" ]; then
+  if docker exec "$DB_CONTAINER_NAME" sh -lc "[ -d '$PGDATA_PATH/base' ]" >/dev/null 2>&1; then
+    echo "Result: Data persistence confirmed."
+    docker exec "$DB_CONTAINER_NAME" sh -lc "du -sh '$PGDATA_PATH' || true"
+  else
+    echo "Warning: PGDATA exists but not initialized (missing base/)."
+    docker exec "$DB_CONTAINER_NAME" sh -lc "ls -la '$PGDATA_PATH' | head -n 50 || true"
+  fi
 else
-  echo "Warning: Data directory seems empty or not initialized."
+  echo "Warning: Cannot resolve PGDATA path from container."
 fi
 
-if have_cmd du; then
-  safe du -sh "$ROOT_DIR/data" "$ROOT_DIR/backups" \
-    || echo "Warning: du failed (permissions/path)."
-else
-  echo "Warning: 'du' not found."
-fi
+du -sh "$BACKUP_DIR" 2>/dev/null || echo "Warning: Cannot read backups dir on host."
+
+
 
 # 4. Kiểm tra Database Initialization (schema.sql)
 echo -e "\n[4/5] Schema Initialization:"
