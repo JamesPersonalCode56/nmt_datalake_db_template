@@ -1,85 +1,115 @@
-# !!! ⚡ NẾU LƯỜI ĐỌC ⚡ !!!
-    1. Đổi tên folder template thành tên project (ví dụ: db_payment)
+# !!! ⚡ Quickstart (TL:DR) ⚡ !!!
 
-    2. terminal: 
-        cd /path/to/<project>       (exp: cd /mnt/14TB/PROD_DB/db_payment)
-        chmod +x setup.sh
+1. **Chuẩn bị Project**:
+    * Đổi tên folder `__database_template__` thành tên project (ví dụ: `db_payment`).
+    * Di chuyển vào thư mục project:
+    ```bash
+    cd /path/to/db_payment
+    ```
 
-    3. terminal: ./setup.sh
+2. **Cấp quyền thực thi**:
+   ```bash
+   chmod +x setup.sh
+   ```
 
-    4. Chỉnh file ".env", sau đó copy + Paste code schema mới vào "init/schema.sql"
-
-    5. terminal: "./scripts/deploy.sh"
-
-    6. Đợi ~15s sau đó chạy file "./scripts/health_check.sh" để xác nhận mọi thứ đã ổn
-* Đọc thêm về các script .sh khác để biết
-* Database dùng Ofelia tự backup mỗi ngày lúc 03:00 gmt+7 (default là 3 bản backup)  
-# !!! ------------------------- !!!
-
-
-# Database Template for Datalake Automation
-
-Professional, production-ready template for deploying and managing isolated PostgreSQL instances within a Datalake architecture.
-
-## 1. Quick Start Workflow
-
-1.  **Initialize**: Run the setup script to prepare the environment.
+3. **Khởi tạo môi trường**:
+    * Chạy script setup để tạo file config và các thư mục cần thiết:
     ```bash
     ./setup.sh
     ```
-    * This copies `.env.example` to `.env`.
-    * Creates `data/` and `backups/` directories.
-    * Sets `.env` permissions to `600` for security.
-    * Grants execution permissions to all scripts.
 
-2.  **Configuration**: Edit `.env` with your specific database credentials, port, and Tailscale IP.
+4. **Cấu hình**:
+   * Mở file `.env` vừa được tạo: điền user, password, database name, port và IP (Tailscale).
+   * Mở file `init/schema.sql`: viết câu lệnh SQL tạo bảng (CREATE TABLE...) nếu cần khởi tạo dữ liệu ban đầu.
 
-3.  **Deployment**: Launch the containerized database.
+5. **Deploy**:
+    * Chạy lệnh sau để build và start database:
     ```bash
     ./scripts/deploy.sh
     ```
-    * Validates that the external port is not already occupied.
-    * Triggers `docker-compose up` using absolute paths.
+
+6. **Kiểm tra**:
+    * Đợi khoảng 15 giây cho DB khởi động, sau đó chạy health check:
+    ```bash
+    ./scripts/health_check.sh
+    ```
+    * Nếu thấy báo **HEALTHY** và các check đều OK là xong.
 
 ---
 
-## 2. Maintenance Scripts Reference
+# PostgreSQL Database Template
 
-All scripts support execution from any directory as they resolve the project root automatically.
+A production-ready, containerized PostgreSQL solution designed for Data Lake architectures. It features automated backups, strict network isolation, and self-healing capabilities.
 
-| Script | Function | Key Feature |
+## 1. System Architecture
+
+The setup consists of two main services orchestrated via Docker Compose:
+
+*   **Database (`db`)**:
+    *   **Image**: Official PostgreSQL (version defined in `.env`).
+    *   **Persistence**: Data stored locally in `./data`.
+    *   **Security**: Binds only to a specific IP (e.g., Tailscale IP) to prevent public access.
+    *   **Healthcheck**: Native `pg_isready` check ensures the DB is responsive.
+
+*   **Scheduler (`scheduler`)**:
+    *   **Image**: Custom build based on `mcuadros/ofelia`.
+    *   **Role**: Runs sidecar to the database to handle periodic tasks.
+    *   **Task**: Executes `./scripts/backup.sh` daily at **03:00 AM** (default).
+
+## 2. Configuration (`.env`)
+
+Run `./setup.sh` to generate the `.env` file from `.env.example`.
+
+| Variable | Description | Example |
 | :--- | :--- | :--- |
-| **`deploy.sh`** | Initial setup & deployment | Port conflict validation. |
-| **`backup.sh`** | Automated SQL dumping | Keeps only the 3 latest compressed backups. |
-| **`restore.sh`**| Data recovery | Auto-detects the latest backup if no file is specified. |
-| **`start.sh`** | Service recovery | Restarts the container if it is found to be down. |
-| **`clean.sh`** | Reset database | Wipes all physical data in the `data/` folder. |
-| **`delete.sh`** | Full teardown | Deletes the container, network, volumes, and project data. |
+| `DB_CONTAINER_NAME` | Unique name for the Docker container | `payment_db` |
+| `DB_IMAGE` | PostgreSQL Docker image version | `postgres:15-alpine` |
+| `DB_HOST_IP` | Bind IP address (use Tailscale/LAN IP) | `100.x.y.z` |
+| `DB_PORT_EXTERNAL` | Port exposed to the host | `5432` |
+| `DB_NAME` | Database name | `payment_db` |
+| `DB_USER` | Database superuser | `admin` |
+| `DB_PASSWORD` | Database password | `secure_pass` |
+| `PROJECT_ROOT` | Absolute path to project (auto-set by setup.sh) | `/mnt/data/db_payment` |
 
----
+## 3. Maintenance Scripts
 
-## 3. Production Features
+Located in the `scripts/` directory. All scripts auto-detect the project root.
 
-### High Availability & Monitoring
-* **Healthchecks**: The container uses `pg_isready` to report its status to the Docker engine every 10 seconds.
-* **Auto-Restart**: Configured with `restart: always` to ensure persistent uptime.
+| Script | Purpose | Description |
+| :--- | :--- | :--- |
+| **`deploy.sh`** | **Deploy** | Checks for port conflicts, builds images, and starts containers (`docker compose up -d`). |
+| **`health_check.sh`** | **Verify** | Comprehensive check: Docker status, Ofelia scheduler registration, volume persistence, and connectivity. |
+| **`backup.sh`** | **Backup** | Dumps the DB to `backups/`. Retains only the 3 most recent files to save space. |
+| **`restore.sh`** | **Restore** | Restores from a `.sql.gz` file. Auto-selects the latest backup if no argument is provided. |
+| **`start.sh`** | **Recovery** | Simple wrapper to restart the container if it's stopped. |
+| **`clean.sh`** | **Reset** | **DANGER**: Wipes the `data/` directory (factory reset). Requires container to be stopped. |
+| **`delete.sh`** | **Teardown** | **DANGER**: Stops containers, removes volumes, networks, and deletes `data/` + `backups/`. |
 
-### Storage & Security
-* **Network Isolation**: Bound specifically to the `DB_HOST_IP` (Tailscale) to prevent public internet exposure.
-* **Log Rotation**: Docker logs are limited to 10MB per file with a maximum of 3 files to prevent disk exhaustion.
-* **Persistence**: Data is mapped to the local `data/` directory for easy migrations.
+## 4. Initialization
 
----
+Any SQL file placed in the `init/` directory (specifically `schema.sql`) will be automatically executed by PostgreSQL **only the first time** the database is created (when `data/` is empty).
 
-## 4. Directory Structure
+## 5. Directory Structure
 
 ```text
 .
-├── backups/           # Compressed SQL dumps (Rotation: 3)
-├── data/              # PostgreSQL physical data files
-├── init/              # Initialization SQL scripts (schema.sql)
-├── scripts/           # Core management shell scripts
-├── .env               # Configuration (Credentials & Network)
-├── docker-compose.yml # Container orchestration config
-├── Dockerfile         # Custom Ofelia image with docker-cli
-└── setup.sh           # Project initializer
+├── .env                # Environment variables (Credentials, Network)
+├── .gitignore
+├── docker-compose.yml  # Docker services config
+├── Dockerfile          # Custom Scheduler image definition
+├── README.md           # This documentation
+├── setup.sh            # Initial setup script
+├── backups/            # Storage for SQL dumps (created by setup.sh)
+├── data/               # Persistent DB storage (created by setup.sh)
+├── init/
+│   └── schema.sql      # Initial SQL schema (tables, indexes)
+└── scripts/
+    ├── _common.sh      # Shared script logic
+    ├── backup.sh       # Backup logic
+    ├── clean.sh        # Data cleanup logic
+    ├── delete.sh       # Full teardown logic
+    ├── deploy.sh       # Deployment logic
+    ├── health_check.sh # System health verification
+    ├── restore.sh      # Restore logic
+    └── start.sh        # Start service logic
+```
