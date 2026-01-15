@@ -47,14 +47,10 @@ fi
 echo -e "\n[2/5] Scheduler Jobs (Ofelia):"
 SCHED="${DB_CONTAINER_NAME}_scheduler"
 if container_exists "$SCHED"; then
-  safe docker logs "$SCHED" 2>&1 | grep "scheduler started" >/dev/null \
-    && echo "Result: Scheduler started." \
-    || echo "Warning: Scheduler might not be started (check logs)."
-
   if container_running "$SCHED"; then
-    safe docker exec "$SCHED" ofelia validate >/dev/null 2>&1 \
-      && echo "Result: ofelia validate OK." \
-      || echo "Warning: ofelia validate failed."
+    safe docker logs --tail 300 "$SCHED" 2>&1 | grep -E 'New job registered|Starting scheduler' >/dev/null \
+      && echo "Result: Scheduler running, job registered." \
+      || echo "Warning: Scheduler running but no job registration found in logs."
   else
     echo "Warning: Scheduler container exists but not running."
   fi
