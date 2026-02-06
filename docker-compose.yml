@@ -15,7 +15,7 @@ services:
     networks:
       - db_internal_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,6 +24,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
   scheduler:
     build: .
     container_name: ${DB_CONTAINER_NAME}_scheduler
@@ -31,16 +32,17 @@ services:
       - db
     environment:
       - TZ=${TZ}
-    command: daemon --docker
+    command: daemon --docker --docker-filter "label=ofelia.scope=${DB_CONTAINER_NAME}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ${PROJECT_ROOT}:${PROJECT_ROOT}
+      - ./:/project:ro
     labels:
-      ofelia.job-local.db-backup.schedule: "0 0 3 * * *"
-      ofelia.job-local.db-backup.command: "/bin/sh -c 'cd ${PROJECT_ROOT} && ./scripts/backup.sh'"
+      ofelia.scope: "${DB_CONTAINER_NAME}"
+      ofelia.job-local.${DB_CONTAINER_NAME}-backup.schedule: "0 0 3 * * *"
+      ofelia.job-local.${DB_CONTAINER_NAME}-backup.command: "/bin/sh -lc 'cd /project && ./scripts/backup.sh'"
+    networks:
+      - db_internal_network
 
 networks:
   db_internal_network:
     name: ${DB_CONTAINER_NAME}_net
-
-    

@@ -12,12 +12,6 @@ if [ ! -f .env ]; then
   cp .env.example .env
 fi
 
-if ! grep -qE '^PROJECT_ROOT=' .env; then
-  printf 'PROJECT_ROOT=%s\n' "$CURRENT_DIR" >> .env
-else
-  sed -i -E "s|^PROJECT_ROOT=.*$|PROJECT_ROOT=$CURRENT_DIR|" .env
-fi
-
 chmod 600 .env
 
 mkdir -p data backups
