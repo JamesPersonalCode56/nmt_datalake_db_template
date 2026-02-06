@@ -31,8 +31,10 @@ BASE_QUERY="sslmode=${SSL_MODE}"
 URL_SQLALCHEMY_ASYNCPG="postgresql+asyncpg://${USER_ENC}:${PASS_ENC}@${BASE_HOSTPORT}${BASE_PATH}?${BASE_QUERY}"
 URL_ASYNCPG="postgresql://${USER_ENC}:${PASS_ENC}@${BASE_HOSTPORT}${BASE_PATH}?${BASE_QUERY}"
 
+echo
 echo "SQLAlchemy (asyncpg):"
 echo "$URL_SQLALCHEMY_ASYNCPG"
 echo
 echo "asyncpg (raw):"
 echo "$URL_ASYNCPG"
+echo
