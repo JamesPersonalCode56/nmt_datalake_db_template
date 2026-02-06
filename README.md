@@ -37,16 +37,14 @@
     * Tự động backup bằng Ofelia mỗi 03:00 gmt+7 (lưu tối đa 3 bản backup)
 
 7. **Cách connect tới DB**:
-    * Điền database url vào `.env` ở project nơi chạy services:
+    * Chạy script hỗ trợ để lấy connection string (URL) chính xác:
+    ```bash
+    ./scripts/get_url.sh
     ```
-    DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DBNAME?param1=value1&param2=value2
+    * Copy output và điền vào `.env` ở project client (nơi chạy services):
     ```
-
-    Example:
+    DATABASE_URL=postgresql://USER:PASSWORD@HOST:PORT/DBNAME?sslmode=disable
     ```
-    DATABASE_URL=postgresql://manhnd:123@100.115.36.121:5432/db_payment?sslmode=disable
-    ```
-    * Lưu ý: password phải URL-encode nếu có ký tự đặc biệt: @ : / ? # % & + =…
 
 ---
 
@@ -73,30 +71,30 @@ The setup consists of two main services orchestrated via Docker Compose:
 
 Run `./setup.sh` to generate the `.env` file from `.env.example`.
 
-| Variable | Description | Example |
-| :--- | :--- | :--- |
-| `DB_CONTAINER_NAME` | Unique name for the Docker container | `payment_db` |
-| `DB_IMAGE` | PostgreSQL Docker image version | `postgres:15-alpine` |
-| `DB_HOST_IP` | Bind IP address (use Tailscale/LAN IP) | `100.x.y.z` |
-| `DB_PORT_EXTERNAL` | Port exposed to the host | `5432` |
-| `DB_NAME` | Database name | `payment_db` |
-| `DB_USER` | Database superuser | `admin` |
-| `DB_PASSWORD` | Database password | `secure_pass` |
-| `PROJECT_ROOT` | Absolute path to project (auto-set by setup.sh) | `/mnt/data/db_payment` |
+| Variable            | Description                            | Example              |
+| :------------------ | :------------------------------------- | :------------------- |
+| `DB_CONTAINER_NAME` | Unique name for the Docker container   | `payment_db`         |
+| `DB_IMAGE`          | PostgreSQL Docker image version        | `postgres:15-alpine` |
+| `DB_HOST_IP`        | Bind IP address (use Tailscale/LAN IP) | `100.x.y.z`          |
+| `DB_PORT_EXTERNAL`  | Port exposed to the host               | `5432`               |
+| `DB_NAME`           | Database name                          | `payment_db`         |
+| `DB_USER`           | Database superuser                     | `admin`              |
+| `DB_PASSWORD`       | Database password                      | `secure_pass`        |
 
 ## 3. Maintenance Scripts
 
 Located in the `scripts/` directory. All scripts auto-detect the project root.
 
-| Script | Purpose | Description |
-| :--- | :--- | :--- |
-| **`deploy.sh`** | **Deploy** | Checks for port conflicts, builds images, and starts containers (`docker compose up -d`). |
-| **`health_check.sh`** | **Verify** | Comprehensive check: Docker status, Ofelia scheduler registration, volume persistence, and connectivity. |
-| **`backup.sh`** | **Backup** | Dumps the DB to `backups/`. Retains only the 3 most recent files to save space. |
-| **`restore.sh`** | **Restore** | Restores from a `.sql.gz` file. Auto-selects the latest backup if no argument is provided. |
-| **`start.sh`** | **Recovery** | Simple wrapper to restart the container if it's stopped. |
-| **`clean.sh`** | **Reset** | **DANGER**: Wipes the `data/` directory (factory reset). Requires container to be stopped. |
-| **`delete.sh`** | **Teardown** | **DANGER**: Stops containers, removes volumes, networks, and deletes `data/` + `backups/`. |
+| Script                | Purpose      | Description                                                                                              |
+| :-------------------- | :----------- | :------------------------------------------------------------------------------------------------------- |
+| **`deploy.sh`**       | **Deploy**   | Checks for port conflicts, builds images, and starts containers (`docker compose up -d`).                |
+| **`health_check.sh`** | **Verify**   | Comprehensive check: Docker status, Ofelia scheduler registration, volume persistence, and connectivity. |
+| **`get_url.sh`**      | **Connect**  | Generates URL-encoded connection strings for SQLAlchemy and asyncpg.                                     |
+| **`backup.sh`**       | **Backup**   | Dumps the DB to `backups/`. Retains only the 3 most recent files to save space.                          |
+| **`restore.sh`**      | **Restore**  | Restores from a `.sql.gz` file. Auto-selects the latest backup if no argument is provided.               |
+| **`start.sh`**        | **Recovery** | Simple wrapper to restart the container if it's stopped.                                                 |
+| **`clean.sh`**        | **Reset**    | **DANGER**: Wipes the `data/` directory (factory reset). Requires container to be stopped.               |
+| **`delete.sh`**       | **Teardown** | **DANGER**: Stops containers, removes volumes, networks, and deletes `data/`.                            |
 
 ## 4. Initialization
 
@@ -122,6 +120,7 @@ Any SQL file placed in the `init/` directory (specifically `schema.sql`) will be
     ├── clean.sh        # Data cleanup logic
     ├── delete.sh       # Full teardown logic
     ├── deploy.sh       # Deployment logic
+    ├── get_url.sh      # Helper to get connection URL
     ├── health_check.sh # System health verification
     ├── restore.sh      # Restore logic
     └── start.sh        # Start service logic
