@@ -38,8 +38,8 @@ services:
       - ./:/project:ro
     labels:
       ofelia.scope: "${DB_CONTAINER_NAME}"
-      ofelia.job-local.${DB_CONTAINER_NAME}-backup.schedule: "0 0 3 * * *"
-      ofelia.job-local.${DB_CONTAINER_NAME}-backup.command: "/bin/sh -lc 'cd /project && ./scripts/backup.sh'"
+      ofelia.job-local.db-backup.schedule: "0 0 3 * * *"
+      ofelia.job-local.db-backup.command: "/bin/sh -lc 'cd /project && ./scripts/backup.sh'"
     networks:
       - db_internal_network
 
