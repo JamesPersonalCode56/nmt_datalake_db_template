@@ -17,6 +17,6 @@ echo "Destroying container, network and volumes..."
 docker compose -f "$COMPOSE_FILE" down --rmi all -v --remove-orphans
 
 if [ -d "$ROOT_DIR/data" ]; then
-    sudo rm -rf "$ROOT_DIR/data"
+    remove_dir "$ROOT_DIR/data"
     echo "Data directory deleted."
 fi

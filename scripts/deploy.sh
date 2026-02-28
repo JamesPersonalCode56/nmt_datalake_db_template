@@ -7,6 +7,16 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
 load_env
 require_compose
 
+mkdir -p "$ROOT_DIR/logs"
+if ! chmod 777 "$ROOT_DIR/logs" 2>/dev/null; then
+  if command -v sudo >/dev/null 2>&1; then
+    sudo chmod 777 "$ROOT_DIR/logs"
+  else
+    echo "Error: cannot set write permission on $ROOT_DIR/logs"
+    exit 1
+  fi
+fi
+
 PORT_CHECK=""
 if command -v ss >/dev/null 2>&1; then
   PORT_CHECK="$(ss -lntp 2>/dev/null | awk '{print $4,$6}' | grep -F ":${DB_PORT_EXTERNAL} " || true)"

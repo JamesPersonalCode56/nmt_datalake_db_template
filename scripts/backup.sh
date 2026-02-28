@@ -19,12 +19,18 @@ BACKUP_DIR="$ROOT_DIR/backups"
 mkdir -p "$BACKUP_DIR" 
 TIMESTAMP=$(date +%Y%m%d_%H%M%S) 
 FILE_NAME="${BACKUP_DIR}/${DB_NAME}_${TIMESTAMP}.sql" 
+KEEP_COUNT="${BACKUP_KEEP_COUNT:-3}"
+
+if ! [[ "$KEEP_COUNT" =~ ^[1-9][0-9]*$ ]]; then
+    echo "Error: BACKUP_KEEP_COUNT must be a positive integer"
+    exit 1
+fi
 
 docker exec "$DB_CONTAINER_NAME" pg_dump -U "$DB_USER" -d "$DB_NAME" --clean --if-exists --no-owner --no-privileges > "$FILE_NAME"
 
 if [ -s "$FILE_NAME" ]; then
     gzip "$FILE_NAME" 
-    ls -t "$BACKUP_DIR"/"${DB_NAME}"_*.sql.gz 2>/dev/null | tail -n +4 | xargs -r rm -f
+    ls -t "$BACKUP_DIR"/"${DB_NAME}"_*.sql.gz 2>/dev/null | tail -n +"$((KEEP_COUNT + 1))" | xargs -r rm -f
 else
     rm -f "$FILE_NAME" 
     exit 1 

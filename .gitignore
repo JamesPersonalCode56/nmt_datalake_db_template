@@ -6,6 +6,8 @@ data/*
 !data/.gitkeep
 backups/*
 !backups/.gitkeep
+logs/*
+!logs/.gitkeep
 db_data/
 volumes/
 .pgdata/
@@ -16,6 +18,8 @@ mongo-data/
 *.bak
 *.dump
 *.log
+/schema.sql
+/init/schema.sql
 
 # OS & Editor
 .DS_Store

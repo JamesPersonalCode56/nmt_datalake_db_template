@@ -3,6 +3,22 @@ services:
     image: ${DB_IMAGE}
     container_name: ${DB_CONTAINER_NAME}
     restart: always
+    command:
+      - postgres
+      - -c
+      - logging_collector=on
+      - -c
+      - log_destination=stderr
+      - -c
+      - log_directory=/var/log/postgresql
+      - -c
+      - log_filename=postgresql-%Y-%m-%d_%H%M%S.log
+      - -c
+      - log_truncate_on_rotation=on
+      - -c
+      - log_rotation_age=${DB_LOG_ROTATION_AGE_MINUTES:-60}
+      - -c
+      - log_rotation_size=${DB_LOG_ROTATION_SIZE:-20MB}
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -12,6 +28,7 @@ services:
     volumes:
       - ./init:/docker-entrypoint-initdb.d
       - ./data:/var/lib/postgresql/data
+      - ./logs:/var/log/postgresql
     networks:
       - db_internal_network
     healthcheck:
@@ -22,26 +39,40 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "10m"
-        max-file: "3"
+        max-size: "${CONTAINER_LOG_MAX_SIZE:-10m}"
+        max-file: "${CONTAINER_LOG_MAX_FILE:-3}"
 
   scheduler:
     build: .
     container_name: ${DB_CONTAINER_NAME}_scheduler
+    restart: always
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     environment:
       - TZ=${TZ}
     command: daemon --docker --docker-filter "label=ofelia.scope=${DB_CONTAINER_NAME}"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./:/project:ro
+      - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro
+      - ./:/project
     labels:
       ofelia.scope: "${DB_CONTAINER_NAME}"
-      ofelia.job-local.db-backup.schedule: "0 0 3 * * *"
+      ofelia.job-local.db-backup.schedule: "${BACKUP_SCHEDULE}"
+      ofelia.job-local.db-backup.no-overlap: "true"
       ofelia.job-local.db-backup.command: "/bin/sh -lc 'cd /project && ./scripts/backup.sh'"
+      ofelia.job-local.log-prune.schedule: "${LOG_PRUNE_SCHEDULE:-0 30 3 * * *}"
+      ofelia.job-local.log-prune.no-overlap: "true"
+      ofelia.job-local.log-prune.command: "/bin/sh -lc 'cd /project && ./scripts/prune_logs.sh'"
+      ofelia.job-local.system-log.schedule: "${SYSTEM_LOG_SCHEDULE:-0 */2 * * * *}"
+      ofelia.job-local.system-log.no-overlap: "true"
+      ofelia.job-local.system-log.command: "/bin/sh -lc 'cd /project && ./scripts/system_log_collector.sh'"
     networks:
       - db_internal_network
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "${CONTAINER_LOG_MAX_SIZE:-10m}"
+        max-file: "${CONTAINER_LOG_MAX_FILE:-3}"
 
 networks:
   db_internal_network:

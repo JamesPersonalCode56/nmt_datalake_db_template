@@ -13,6 +13,6 @@ echo "Stopping container and cleaning data..."
 docker compose -f "$COMPOSE_FILE" down
 
 if [ -d "$ROOT_DIR/data" ]; then
-    sudo rm -rf "$ROOT_DIR/data/"*
+    remove_dir_contents "$ROOT_DIR/data"
     echo "Data directory cleared."
 fi
