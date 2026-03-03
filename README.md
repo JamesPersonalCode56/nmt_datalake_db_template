@@ -37,12 +37,14 @@
      * Log PostgreSQL nằm ở `logs/`.
      * Log hệ thống (stdout/stderr của `db` + `scheduler`) cũng nằm ở `logs/`.
    * Mở file `init/schema.sql` (được tạo bởi `setup.sh`): viết câu lệnh SQL tạo bảng (CREATE TABLE...) nếu cần khởi tạo dữ liệu ban đầu.
+   * Khi cần đổi schema cho DB đang chạy: thêm file `.sql` mới vào `migrations/` (ví dụ `20260303_add_users.sql`).
 
 5. **Deploy**:
     * Chạy lệnh sau để build và start database:
     ```bash
     ./scripts/deploy.sh
     ```
+    * `deploy.sh` sẽ tự chạy migration (`scripts/migrate.sh`) nếu `AUTO_MIGRATE_ON_DEPLOY=true`.
 
 6. **Kiểm tra**:
     * Đợi khoảng 15 giây cho DB khởi động, sau đó chạy health check:
@@ -105,6 +107,8 @@ Run `./setup.sh` to generate the `.env` file from `.env.example`.
 | `TZ`                | Timezone cho scheduler                 | `Asia/Ho_Chi_Minh`   |
 | `BACKUP_KEEP_COUNT` | Số backup giữ lại                      | `3`                  |
 | `BACKUP_SCHEDULE`   | Lịch backup (cron 6 field)             | `"0 0 3 * * *"`      |
+| `AUTO_MIGRATE_ON_DEPLOY` | Tự chạy migration sau deploy      | `true`               |
+| `MIGRATION_TABLE`   | Bảng lưu lịch sử migration             | `schema_migrations`  |
 | `DB_LOG_ROTATION_AGE_MINUTES` | Tuổi rotate log PostgreSQL (phút) | `60` |
 | `DB_LOG_ROTATION_SIZE` | Kích thước rotate log PostgreSQL | `20MB` |
 | `DB_LOG_RETENTION_DAYS` | Số ngày giữ file log PostgreSQL | `14` |
@@ -122,7 +126,8 @@ Located in the `scripts/` directory. All scripts auto-detect the project root.
 
 | Script                | Purpose      | Description                                                                                              |
 | :-------------------- | :----------- | :------------------------------------------------------------------------------------------------------- |
-| **`deploy.sh`**       | **Deploy**   | Checks for port conflicts, builds images, and starts containers (`docker compose up -d`).                |
+| **`deploy.sh`**       | **Deploy**   | Checks for port conflicts, starts containers (`docker compose up -d`) and auto-runs migrations.           |
+| **`migrate.sh`**      | **Migrate**  | Applies new `migrations/*.sql` files in order and records checksums in DB table `schema_migrations`.      |
 | **`health_check.sh`** | **Verify**   | Comprehensive check: Docker status, Ofelia scheduler registration, volume persistence, and connectivity. |
 | **`get_url.sh`**      | **Connect**  | Generates URL-encoded connection strings for SQLAlchemy and asyncpg.                                     |
 | **`backup.sh`**       | **Backup**   | Dumps the DB to `backups/`. Retention controlled by `BACKUP_KEEP_COUNT`.                                  |
@@ -138,6 +143,8 @@ Located in the `scripts/` directory. All scripts auto-detect the project root.
 `init/` được track bằng `.gitkeep`. File `init/schema.sql` sẽ được `setup.sh` tạo runtime.
 
 Any SQL file placed in the `init/` directory (specifically `schema.sql`) will be automatically executed by PostgreSQL **only the first time** the database is created (when `data/` is empty).
+
+For any schema update after first deploy, create a new SQL file in `migrations/` and run `./scripts/migrate.sh` (or `./scripts/deploy.sh` with auto-migrate enabled).
 
 ## 5. Runtime files after setup/deploy
 
@@ -164,6 +171,8 @@ Generated locally (không track git):
 ├── data/               # Persistent DB storage (created by setup.sh)
 ├── logs/               # PostgreSQL file logs + container system logs
 │   └── .gitkeep
+├── migrations/         # SQL migrations for existing DB updates
+│   └── .gitkeep
 ├── init/
 │   └── .gitkeep        # Keep empty dir in git; schema.sql is runtime-generated
 └── scripts/
@@ -174,6 +183,7 @@ Generated locally (không track git):
     ├── deploy.sh       # Deployment logic
     ├── get_url.sh      # Helper to get connection URL
     ├── health_check.sh # System health verification
+    ├── migrate.sh      # Apply SQL migrations and track history
     ├── prune_logs.sh   # PostgreSQL logs retention
     ├── restore.sh      # Restore logic
     ├── start.sh        # Start service logic

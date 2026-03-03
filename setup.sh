@@ -14,9 +14,8 @@ fi
 
 chmod 600 "$ROOT_DIR/.env"
 
-mkdir -p "$ROOT_DIR/data" "$ROOT_DIR/backups" "$ROOT_DIR/init" "$ROOT_DIR/logs"
+mkdir -p "$ROOT_DIR/data" "$ROOT_DIR/backups" "$ROOT_DIR/init" "$ROOT_DIR/logs" "$ROOT_DIR/migrations"
 touch "$ROOT_DIR/init/schema.sql"
-touch "$ROOT_DIR/logs/.gitkeep"
 chmod 777 "$ROOT_DIR/logs"
 
 if [ -d "$ROOT_DIR/scripts" ]; then
