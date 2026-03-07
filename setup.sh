@@ -14,8 +14,10 @@ fi
 
 chmod 600 "$ROOT_DIR/.env"
 
-mkdir -p "$ROOT_DIR/data" "$ROOT_DIR/backups" "$ROOT_DIR/init" "$ROOT_DIR/logs" "$ROOT_DIR/migrations"
+mkdir -p "$ROOT_DIR/data" "$ROOT_DIR/backups" "$ROOT_DIR/init" "$ROOT_DIR/logs" "$ROOT_DIR/migrations" "$ROOT_DIR/secrets/rclone"
 touch "$ROOT_DIR/init/schema.sql"
+touch "$ROOT_DIR/secrets/rclone/rclone.conf"
+chmod 600 "$ROOT_DIR/secrets/rclone/rclone.conf"
 chmod 777 "$ROOT_DIR/logs"
 
 if [ -d "$ROOT_DIR/scripts" ]; then

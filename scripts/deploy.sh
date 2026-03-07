@@ -41,7 +41,7 @@ if [ -n "$PORT_CHECK" ]; then
   fi
 fi
 
-docker compose -f "$COMPOSE_FILE" up -d
+docker compose -f "$COMPOSE_FILE" up -d --build
 
 AUTO_MIGRATE_ON_DEPLOY="${AUTO_MIGRATE_ON_DEPLOY:-true}"
 AUTO_MIGRATE_ON_DEPLOY="$(echo "$AUTO_MIGRATE_ON_DEPLOY" | tr '[:upper:]' '[:lower:]')"

@@ -1,5 +1,6 @@
 # Environment (secrets)
 .env
+secrets/
 
 # Docker volumes / database data
 data/*
