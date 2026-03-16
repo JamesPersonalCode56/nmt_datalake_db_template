@@ -108,6 +108,7 @@ Run `./setup.sh` to generate the `.env` file from `.env.example`.
 | `RCLONE_CONFIG`     | Path tuyệt đối tới `rclone.conf` trong container scheduler | `/project/secrets/rclone/rclone.conf` |
 | `DB_LOG_ROTATION_AGE_MINUTES` | Tuổi rotate log PostgreSQL (phút) | `60` |
 | `DB_LOG_ROTATION_SIZE` | Kích thước rotate log PostgreSQL | `50MB` |
+| `DB_LOG_FILE_MODE` | Permission mode cho PostgreSQL log files mới tạo | `0644` |
 | `DB_LOG_MAX_FILES` | Số file PostgreSQL log giữ lại tối đa | `24` |
 | `DB_LOG_MAX_SIZE_MB` | Tổng dung lượng tối đa của PostgreSQL log | `1024` |
 | `LOG_PRUNE_SCHEDULE` | Lịch dọn log PostgreSQL (cron 6 field) | `"0 0 * * * *"` |
