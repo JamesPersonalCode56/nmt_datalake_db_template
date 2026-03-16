@@ -24,6 +24,15 @@ fi
 mkdir -p "$LOG_DIR"
 MAX_SIZE_BYTES=$((MAX_SIZE_MB * 1024 * 1024))
 
+list_oldest_postgres_logs() {
+  local files=()
+  shopt -s nullglob
+  files=("$LOG_DIR"/postgresql-*.log)
+  shopt -u nullglob
+  [ ${#files[@]} -eq 0 ] && return 0
+  ls -1tr "${files[@]}"
+}
+
 while IFS= read -r file; do
   FILE_COUNT=$((FILE_COUNT + 1))
   TOTAL_SIZE_BYTES=$((TOTAL_SIZE_BYTES + $(wc -c < "$file")))
@@ -41,4 +50,4 @@ while IFS= read -r file; do
   rm -f -- "$file"
   FILE_COUNT=$((FILE_COUNT - 1))
   TOTAL_SIZE_BYTES=$((TOTAL_SIZE_BYTES - FILE_SIZE_BYTES))
-done < <(find "$LOG_DIR" -maxdepth 1 -type f -name 'postgresql-*.log' -printf '%T@ %p\n' | sort -n | awk '{ $1=""; sub(/^ /, ""); print }')
+done < <(list_oldest_postgres_logs)

@@ -58,6 +58,16 @@ rotate_file() {
   : > "$file"
 }
 
+list_oldest_family_logs() {
+  local pattern="$1"
+  local files=()
+  shopt -s nullglob
+  files=("$LOG_DIR"/$pattern)
+  shopt -u nullglob
+  [ ${#files[@]} -eq 0 ] && return 0
+  ls -1tr "${files[@]}"
+}
+
 prune_file_family() {
   local file="$1"
   local pattern=""
@@ -82,7 +92,7 @@ prune_file_family() {
     rm -f -- "$matched_file"
     file_count=$((file_count - 1))
     total_size_bytes=$((total_size_bytes - file_size_bytes))
-  done < <(find "$LOG_DIR" -maxdepth 1 -type f -name "$pattern" -printf '%T@ %p\n' | sort -n | awk '{ $1=""; sub(/^ /, ""); print }')
+  done < <(list_oldest_family_logs "$pattern")
 }
 
 collect_logs() {
