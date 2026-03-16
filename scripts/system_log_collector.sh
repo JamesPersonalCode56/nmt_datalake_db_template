@@ -5,9 +5,10 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_common.sh"
 load_env
 
 LOG_DIR="$ROOT_DIR/logs"
-MAX_SIZE_MB="${SYSTEM_LOG_MAX_SIZE_MB:-20}"
-MAX_FILES="${SYSTEM_LOG_MAX_FILES:-5}"
-RETENTION_DAYS="${SYSTEM_LOG_RETENTION_DAYS:-14}"
+ROTATE_SIZE_MB="${SYSTEM_LOG_ROTATE_SIZE_MB:-20}"
+MAX_SIZE_MB="${SYSTEM_LOG_MAX_SIZE_MB:-2048}"
+MAX_FILES="${SYSTEM_LOG_MAX_FILES:-10}"
+ROTATE_SIZE_BYTES=0
 MAX_SIZE_BYTES=0
 
 validate_positive_int() {
@@ -20,21 +21,22 @@ validate_non_negative_int() {
   [[ "$value" =~ ^[0-9]+$ ]]
 }
 
-if ! validate_positive_int "$MAX_SIZE_MB"; then
-  echo "Error: SYSTEM_LOG_MAX_SIZE_MB must be a positive integer"
+if ! validate_positive_int "$ROTATE_SIZE_MB"; then
+  echo "Error: SYSTEM_LOG_ROTATE_SIZE_MB must be a positive integer"
   exit 1
 fi
 
-if ! validate_positive_int "$MAX_FILES"; then
-  echo "Error: SYSTEM_LOG_MAX_FILES must be a positive integer"
+if ! validate_non_negative_int "$MAX_SIZE_MB"; then
+  echo "Error: SYSTEM_LOG_MAX_SIZE_MB must be a non-negative integer"
   exit 1
 fi
 
-if ! validate_non_negative_int "$RETENTION_DAYS"; then
-  echo "Error: SYSTEM_LOG_RETENTION_DAYS must be a non-negative integer"
+if ! validate_non_negative_int "$MAX_FILES"; then
+  echo "Error: SYSTEM_LOG_MAX_FILES must be a non-negative integer"
   exit 1
 fi
 
+ROTATE_SIZE_BYTES=$((ROTATE_SIZE_MB * 1024 * 1024))
 MAX_SIZE_BYTES=$((MAX_SIZE_MB * 1024 * 1024))
 mkdir -p "$LOG_DIR"
 
@@ -44,7 +46,8 @@ rotate_file() {
   local i=0
   [ -f "$file" ] || return 0
   size="$(wc -c < "$file" | tr -d '[:space:]')"
-  [ "$size" -le "$MAX_SIZE_BYTES" ] && return 0
+  [ "$size" -le "$ROTATE_SIZE_BYTES" ] && return 0
+  [ "$MAX_FILES" -eq 0 ] && return 0
   rm -f "${file}.${MAX_FILES}"
   for ((i=MAX_FILES-1; i>=1; i--)); do
     if [ -f "${file}.${i}" ]; then
@@ -58,12 +61,28 @@ rotate_file() {
 prune_file_family() {
   local file="$1"
   local pattern=""
+  local file_count=0
+  local total_size_bytes=0
+  local file_size_bytes=0
   pattern="$(basename "$file")*"
-  if [ "$RETENTION_DAYS" -eq 0 ]; then
-    find "$LOG_DIR" -type f -name "$pattern" -delete
-  else
-    find "$LOG_DIR" -type f -name "$pattern" -mtime +"$RETENTION_DAYS" -delete
+  while IFS= read -r matched_file; do
+    file_count=$((file_count + 1))
+    total_size_bytes=$((total_size_bytes + $(wc -c < "$matched_file")))
+  done < <(find "$LOG_DIR" -maxdepth 1 -type f -name "$pattern" -print | sort)
+
+  if [ "$file_count" -le "$MAX_FILES" ] && [ "$total_size_bytes" -le "$MAX_SIZE_BYTES" ]; then
+    return 0
   fi
+
+  while IFS= read -r matched_file; do
+    if [ "$file_count" -le "$MAX_FILES" ] && [ "$total_size_bytes" -le "$MAX_SIZE_BYTES" ]; then
+      break
+    fi
+    file_size_bytes=$(wc -c < "$matched_file")
+    rm -f -- "$matched_file"
+    file_count=$((file_count - 1))
+    total_size_bytes=$((total_size_bytes - file_size_bytes))
+  done < <(find "$LOG_DIR" -maxdepth 1 -type f -name "$pattern" -printf '%T@ %p\n' | sort -n | awk '{ $1=""; sub(/^ /, ""); print }')
 }
 
 collect_logs() {

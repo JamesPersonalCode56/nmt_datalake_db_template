@@ -47,7 +47,7 @@
     * Backup tự động theo `BACKUP_SCHEDULE` trên timezone `TZ` (mặc định 03:00 mỗi ngày, giữ 3 bản)
     * Nếu bật cloud backup, mỗi lần backup local xong sẽ sync remote để danh sách file trên cloud luôn trùng với local.
     * System log được gom định kỳ theo `SYSTEM_LOG_SCHEDULE` vào `logs/`
-    * Log PostgreSQL được rotate theo `DB_LOG_ROTATION_*`
+    * Log PostgreSQL được rotate theo `DB_LOG_ROTATION_*`, rồi prune theo `DB_LOG_MAX_FILES` + `DB_LOG_MAX_SIZE_MB`
 
 7. **Cách connect tới DB**:
     * Chạy script hỗ trợ để lấy connection string (URL) chính xác:
@@ -107,15 +107,16 @@ Run `./setup.sh` to generate the `.env` file from `.env.example`.
 | `CLOUD_BACKUP_BASE_PATH` | Thư mục gốc trên remote (script tự thêm `${DB_CONTAINER_NAME}`) | `datalake_backups` |
 | `RCLONE_CONFIG`     | Path tuyệt đối tới `rclone.conf` trong container scheduler | `/project/secrets/rclone/rclone.conf` |
 | `DB_LOG_ROTATION_AGE_MINUTES` | Tuổi rotate log PostgreSQL (phút) | `60` |
-| `DB_LOG_ROTATION_SIZE` | Kích thước rotate log PostgreSQL | `20MB` |
-| `DB_LOG_RETENTION_DAYS` | Số ngày giữ file log PostgreSQL | `14` |
-| `LOG_PRUNE_SCHEDULE` | Lịch dọn log PostgreSQL (cron 6 field) | `"0 30 3 * * *"` |
+| `DB_LOG_ROTATION_SIZE` | Kích thước rotate log PostgreSQL | `50MB` |
+| `DB_LOG_MAX_FILES` | Số file PostgreSQL log giữ lại tối đa | `24` |
+| `DB_LOG_MAX_SIZE_MB` | Tổng dung lượng tối đa của PostgreSQL log | `1024` |
+| `LOG_PRUNE_SCHEDULE` | Lịch dọn log PostgreSQL (cron 6 field) | `"0 0 * * * *"` |
 | `SYSTEM_LOG_SCHEDULE` | Lịch gom system log (cron 6 field) | `"0 */2 * * * *"` |
-| `SYSTEM_LOG_MAX_SIZE_MB` | Kích thước tối đa mỗi file system log | `20` |
-| `SYSTEM_LOG_MAX_FILES` | Số file rotate system log giữ lại | `5` |
-| `SYSTEM_LOG_RETENTION_DAYS` | Số ngày giữ system log | `14` |
-| `CONTAINER_LOG_MAX_SIZE` | max-size cho docker json log | `10m` |
-| `CONTAINER_LOG_MAX_FILE` | max-file cho docker json log | `3` |
+| `SYSTEM_LOG_ROTATE_SIZE_MB` | Kích thước rotate của mỗi system log file đang active | `20` |
+| `SYSTEM_LOG_MAX_SIZE_MB` | Tổng dung lượng tối đa của từng family system log (`db_system.log*`, `scheduler_system.log*`) | `512` |
+| `SYSTEM_LOG_MAX_FILES` | Số file tối đa giữ lại cho từng family system log | `10` |
+| `CONTAINER_LOG_MAX_SIZE` | max-size cho docker json log | `20m` |
+| `CONTAINER_LOG_MAX_FILE` | max-file cho docker json log | `5` |
 
 ## 3. Maintenance Scripts
 
@@ -128,8 +129,8 @@ Located in the `scripts/` directory. All scripts auto-detect the project root.
 | **`health_check.sh`** | **Verify**   | Comprehensive check: Docker status, Ofelia scheduler registration, volume persistence, and connectivity. |
 | **`get_url.sh`**      | **Connect**  | Generates URL-encoded connection strings for SQLAlchemy and asyncpg.                                     |
 | **`backup.sh`**       | **Backup**   | Dumps DB to `backups/`, applies local retention, then syncs cloud so remote files match local backups.    |
-| **`prune_logs.sh`**   | **Log Prune**| Removes PostgreSQL file logs in `logs/` older than `DB_LOG_RETENTION_DAYS`.                                |
-| **`system_log_collector.sh`** | **System Logs** | Collects `db` + `scheduler` container logs into `logs/` with size/file retention limits. |
+| **`prune_logs.sh`**   | **Log Prune**| Keeps at most `DB_LOG_MAX_FILES` PostgreSQL log files and total size <= `DB_LOG_MAX_SIZE_MB` by deleting the oldest matching files first. |
+| **`system_log_collector.sh`** | **System Logs** | Collects `db` + `scheduler` container logs into `logs/`, rotates the active file by `SYSTEM_LOG_ROTATE_SIZE_MB`, then prunes each file family by `SYSTEM_LOG_MAX_FILES` and `SYSTEM_LOG_MAX_SIZE_MB`. |
 | **`restore.sh`**      | **Restore**  | Restores from a `.sql.gz` file. Auto-selects the latest backup if no argument is provided.               |
 | **`start.sh`**        | **Recovery** | Simple wrapper to restart the container if it's stopped.                                                 |
 | **`clean.sh`**        | **Reset**    | **DANGER**: Wipes the `data/` directory (factory reset). Requires container to be stopped.               |

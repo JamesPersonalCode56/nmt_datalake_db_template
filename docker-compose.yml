@@ -12,7 +12,7 @@ services:
       - -c
       - log_directory=/var/log/postgresql
       - -c
-      - log_filename=postgresql-%Y-%m-%d_%H%M%S.log
+      - log_filename=postgresql-%Y-%m-%d_%H00__%M%S.log
       - -c
       - log_truncate_on_rotation=on
       - -c
@@ -60,7 +60,7 @@ services:
       ofelia.job-local.db-backup.schedule: "${BACKUP_SCHEDULE}"
       ofelia.job-local.db-backup.no-overlap: "true"
       ofelia.job-local.db-backup.command: "/bin/sh -lc 'cd /project && ./scripts/backup.sh'"
-      ofelia.job-local.log-prune.schedule: "${LOG_PRUNE_SCHEDULE:-0 30 3 * * *}"
+      ofelia.job-local.log-prune.schedule: "${LOG_PRUNE_SCHEDULE:-0 0 * * * *}"
       ofelia.job-local.log-prune.no-overlap: "true"
       ofelia.job-local.log-prune.command: "/bin/sh -lc 'cd /project && ./scripts/prune_logs.sh'"
       ofelia.job-local.system-log.schedule: "${SYSTEM_LOG_SCHEDULE:-0 */2 * * * *}"
