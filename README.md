@@ -37,6 +37,10 @@
     ./scripts/deploy.sh
     ```
     * `deploy.sh` sẽ tự chạy migration (`scripts/migrate.sh`) nếu `AUTO_MIGRATE_ON_DEPLOY=true`.
+    * Nếu chỉ muốn dừng service mà không xóa data:
+    ```bash
+    ./scripts/stop.sh
+    ```
 
 6. **Kiểm tra**:
     * Đợi khoảng 15 giây cho DB khởi động, sau đó chạy health check:
@@ -134,6 +138,7 @@ Located in the `scripts/` directory. All scripts auto-detect the project root.
 | **`system_log_collector.sh`** | **System Logs** | Collects `db` + `scheduler` container logs into `logs/`, rotates the active file by `SYSTEM_LOG_ROTATE_SIZE_MB`, then prunes each file family by `SYSTEM_LOG_MAX_FILES` and `SYSTEM_LOG_MAX_SIZE_MB`. |
 | **`restore.sh`**      | **Restore**  | Restores from a `.sql.gz` file. Auto-selects the latest backup if no argument is provided.               |
 | **`start.sh`**        | **Recovery** | Simple wrapper to restart the container if it's stopped.                                                 |
+| **`stop.sh`**         | **Stop**     | Stops the database and scheduler containers without deleting data, logs, volumes, or network.           |
 | **`clean.sh`**        | **Reset**    | **DANGER**: Wipes the `data/` directory (factory reset). Requires container to be stopped.               |
 | **`delete.sh`**       | **Teardown** | **DANGER**: Stops containers, removes volumes, networks, and deletes `data/`.                            |
 
@@ -190,5 +195,6 @@ Generated locally (không track git):
     ├── prune_logs.sh   # PostgreSQL logs retention
     ├── restore.sh      # Restore logic
     ├── start.sh        # Start service logic
+    ├── stop.sh         # Stop service logic without deleting data
     └── system_log_collector.sh # Collect container system logs
 ```
