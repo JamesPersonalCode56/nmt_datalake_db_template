@@ -19,8 +19,7 @@ mongo-data/
 *.bak
 *.dump
 *.log
-/schema.sql
-/init/schema.sql
+/init/*.sql
 /migrations/*.sql
 
 # OS & Editor
