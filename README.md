@@ -49,7 +49,7 @@
     ```
     * Nếu thấy báo **HEALTHY** và các check đều OK là xong.
     * Backup tự động theo `BACKUP_SCHEDULE` trên timezone `TZ` (mặc định 03:00 mỗi ngày, giữ 3 bản)
-    * Nếu bật cloud backup, mỗi lần backup local xong sẽ sync remote để danh sách file trên cloud luôn trùng với local.
+    * Nếu bật cloud backup, mỗi lần backup local xong sẽ upload (`rclone copy`) bản mới lên remote. Remote là archive offsite tích lũy: xóa/retention ở local KHÔNG xóa file trên cloud. Retention phía cloud nên đặt bằng lifecycle policy của bucket.
     * System log được gom định kỳ theo `SYSTEM_LOG_SCHEDULE` vào `logs/`
     * Log PostgreSQL được rotate theo `DB_LOG_ROTATION_*`, rồi prune theo `DB_LOG_MAX_FILES` + `DB_LOG_MAX_SIZE_MB`
 
@@ -133,7 +133,7 @@ Located in the `scripts/` directory. All scripts auto-detect the project root.
 | **`migrate.sh`**      | **Migrate**  | Applies new `migrations/*.sql` files in order and records checksums in DB table `schema_migrations`.      |
 | **`health_check.sh`** | **Verify**   | Comprehensive check: Docker status, Ofelia scheduler registration, volume persistence, and connectivity. |
 | **`get_url.sh`**      | **Connect**  | Generates URL-encoded connection strings for SQLAlchemy and asyncpg.                                     |
-| **`backup.sh`**       | **Backup**   | Dumps DB to `backups/`, applies local retention, then syncs cloud so remote files match local backups.    |
+| **`backup.sh`**       | **Backup**   | Dumps DB to `backups/`, applies local retention, then `rclone copy` to cloud as an accumulating offsite archive (local retention does not delete remote files). |
 | **`prune_logs.sh`**   | **Log Prune**| Keeps at most `DB_LOG_MAX_FILES` PostgreSQL log files and total size <= `DB_LOG_MAX_SIZE_MB` by deleting the oldest matching files first. |
 | **`system_log_collector.sh`** | **System Logs** | Collects `db` + `scheduler` container logs into `logs/`, rotates the active file by `SYSTEM_LOG_ROTATE_SIZE_MB`, then prunes each file family by `SYSTEM_LOG_MAX_FILES` and `SYSTEM_LOG_MAX_SIZE_MB`. |
 | **`restore.sh`**      | **Restore**  | Restores from a `.sql.gz` file. Auto-selects the latest backup if no argument is provided.               |

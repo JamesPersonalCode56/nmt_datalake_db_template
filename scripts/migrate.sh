@@ -86,9 +86,9 @@ for migration_file in "${MIGRATION_FILES[@]}"; do
   fi
 
   echo "Apply: $filename"
-  docker exec -i "$DB_CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 < "$migration_file"
-  docker exec "$DB_CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1 -c \
-    "INSERT INTO public.\"$MIGRATION_TABLE\" (filename, checksum) VALUES ('$filename_esc', '$checksum');" >/dev/null
+  record_sql="INSERT INTO public.\"$MIGRATION_TABLE\" (filename, checksum) VALUES ('$filename_esc', '$checksum');"
+  { cat "$migration_file"; printf '\n%s\n' "$record_sql"; } | \
+    docker exec -i "$DB_CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" --single-transaction -v ON_ERROR_STOP=1 >/dev/null
   APPLIED=$((APPLIED + 1))
 done
 

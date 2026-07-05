@@ -64,7 +64,7 @@ if [ "$CLOUD_BACKUP_ENABLED" = "true" ] || [ "$CLOUD_BACKUP_ENABLED" = "1" ] || 
             echo "Error: RCLONE_CONFIG file not found at $RCLONE_CONFIG_PATH"
             exit 1
         fi
-        RCLONE_CONFIG="$RCLONE_CONFIG_PATH" rclone sync "$BACKUP_DIR" "$CLOUD_TARGET_DIR" --include "$INCLUDE_PATTERN" --stats 0 --checkers 4 --transfers 1
+        RCLONE_CONFIG="$RCLONE_CONFIG_PATH" rclone copy "$BACKUP_DIR" "$CLOUD_TARGET_DIR" --include "$INCLUDE_PATTERN" --stats 0 --checkers 4 --transfers 1
     else
         SCHED_CONTAINER="${DB_CONTAINER_NAME}_scheduler"
         if ! docker inspect "$SCHED_CONTAINER" >/dev/null 2>&1; then
@@ -76,6 +76,6 @@ if [ "$CLOUD_BACKUP_ENABLED" = "true" ] || [ "$CLOUD_BACKUP_ENABLED" = "1" ] || 
             exit 1
         fi
         docker exec -e RCLONE_CONFIG="$RCLONE_CONFIG_PATH" "$SCHED_CONTAINER" \
-            rclone sync /project/backups "$CLOUD_TARGET_DIR" --include "$INCLUDE_PATTERN" --stats 0 --checkers 4 --transfers 1
+            rclone copy /project/backups "$CLOUD_TARGET_DIR" --include "$INCLUDE_PATTERN" --stats 0 --checkers 4 --transfers 1
     fi
 fi

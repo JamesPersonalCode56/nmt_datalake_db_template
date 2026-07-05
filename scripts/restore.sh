@@ -18,9 +18,9 @@ fi
 docker compose -f "$COMPOSE_FILE" start
 
 if [[ "$SELECTED_FILE" == *.gz ]]; then
-  gunzip -c "$SELECTED_FILE" | docker exec -i "$DB_CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1
+  gunzip -c "$SELECTED_FILE" | docker exec -i "$DB_CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" --single-transaction -v ON_ERROR_STOP=1
 else
-  cat "$SELECTED_FILE" | docker exec -i "$DB_CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" -v ON_ERROR_STOP=1
+  docker exec -i "$DB_CONTAINER_NAME" psql -U "$DB_USER" -d "$DB_NAME" --single-transaction -v ON_ERROR_STOP=1 < "$SELECTED_FILE"
 fi
 
 echo "-------------------------------------------------------"
